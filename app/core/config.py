@@ -20,9 +20,22 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     qdrant_url: str = "http://localhost:6333"
 
+    # Connection pool. Defaults suit one API process; raise pool_size only after
+    # checking Postgres' own max_connections, which every process shares.
+    db_echo: bool = False
+    db_pool_size: int = 5
+    db_max_overflow: int = 10
+    db_pool_timeout: int = 30
+    db_pool_recycle: int = 1800
+
     @property
     def is_production(self) -> bool:
         return self.environment == "production"
+
+    @property
+    def sync_database_url(self) -> str:
+        """Same database, synchronous driver. Used by tooling that cannot await."""
+        return self.database_url.replace("+asyncpg", "+psycopg")
 
 
 @lru_cache

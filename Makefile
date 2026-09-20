@@ -1,4 +1,4 @@
-.PHONY: install run lint format typecheck test check up down logs ps reset db-shell redis-cli
+.PHONY: install run lint format typecheck test check up down logs ps reset db-shell redis-cli migrate rollback revision history
 
 install:
 	uv sync
@@ -46,3 +46,18 @@ db-shell:
 
 redis-cli:
 	docker compose exec redis redis-cli
+
+# --- Migrations --------------------------------------------------------------
+
+migrate:
+	uv run alembic upgrade head
+
+rollback:
+	uv run alembic downgrade -1
+
+history:
+	uv run alembic history --verbose
+
+# usage: make revision m="add tenants table"
+revision:
+	uv run alembic revision --autogenerate -m "$(m)"
