@@ -14,6 +14,15 @@ class Settings(BaseSettings):
     debug: bool = False
     api_v1_prefix: str = "/v1"
 
+    # Datastores. Docker Compose overrides the hosts with service names.
+    database_url: str = "postgresql+asyncpg://opspilot:opspilot@localhost:5432/opspilot"
+    redis_url: str = "redis://localhost:6379/0"
+    qdrant_url: str = "http://localhost:6333"
+
+    @property
+    def is_production(self) -> bool:
+        return self.environment == "production"
+
 
 @lru_cache
 def get_settings() -> Settings:
