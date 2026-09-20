@@ -14,7 +14,8 @@ from app.api import health
 from app.api.v1.router import api_router
 from app.core.config import Settings, get_settings
 from app.core.errors import register_exception_handlers
-from app.core.health import clear_checks
+from app.core.health import clear_checks, register_check
+from app.db.session import check_database, dispose_engine, init_engine
 
 DESCRIPTION = """
 OpsPilot ingests alerts from monitoring tools, groups them into incidents, and
@@ -25,13 +26,20 @@ postmortems. Remediations are proposed, never applied without human approval.
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """Start and stop shared resources.
+    """Open shared resources once per process, and close them on shutdown.
 
-    Connection pools and the background scheduler are opened here in later
-    sprints, so they are created once per process rather than per request.
+    The connection pool belongs here rather than at import time: creating it per
+    request would exhaust Postgres, and creating it at import would make tests
+    and CLI tools open sockets just by importing the module.
     """
-    yield
-    clear_checks()
+    settings = get_settings()
+    init_engine(settings)
+    register_check("database", check_database)
+    try:
+        yield
+    finally:
+        clear_checks()
+        await dispose_engine()
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
