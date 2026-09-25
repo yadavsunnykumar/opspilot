@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from httpx import AsyncClient
 
@@ -18,7 +20,7 @@ async def test_readiness_is_ok_when_no_dependencies_registered(client: AsyncClie
     body = response.json()
     assert body["status"] == "ok"
     assert body["checks"] == {}
-    assert body["environment"] == "local"
+    assert body["environment"] == os.getenv("OPSPILOT_ENVIRONMENT", "local")
 
 
 async def test_readiness_reports_ok_check(client: AsyncClient) -> None:
