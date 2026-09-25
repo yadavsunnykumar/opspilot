@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     api_v1_prefix: str = "/v1"
     cors_origins: list[str] = ["http://localhost:3000"]
 
+    # Logging. JSON is what a log platform indexes; console is readable locally.
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
+    log_json: bool | None = None
+
     database_url: str = "postgresql+asyncpg://opspilot:opspilot@localhost:5432/opspilot"
     redis_url: str = "redis://localhost:6379/0"
     qdrant_url: str = "http://localhost:6333"
@@ -31,6 +35,13 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.environment == "production"
+
+    @property
+    def use_json_logs(self) -> bool:
+        """JSON everywhere except local development, unless set explicitly."""
+        if self.log_json is not None:
+            return self.log_json
+        return self.environment != "local"
 
     @property
     def sync_database_url(self) -> str:

@@ -12,6 +12,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.core.context import get_request_id
+
 PROBLEM_CONTENT_TYPE = "application/problem+json"
 
 # Spelled out rather than imported: Starlette renamed its 422 constant, and the
@@ -85,6 +87,9 @@ def problem_response(
         "detail": detail,
         "instance": instance,
     }
+    request_id = get_request_id()
+    if request_id is not None:
+        body["request_id"] = request_id
     body.update({k: v for k, v in extra.items() if v is not None})
     return JSONResponse(
         status_code=status_code,
